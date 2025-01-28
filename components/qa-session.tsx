@@ -1,25 +1,41 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import type { Question, UserInfo, Session } from "../types/qa"
-import { v4 as uuidv4 } from "uuid"
-import { QuestionItem } from "./question-item"
-import { addQuestionAction, updateQuestionLikesAction } from "@/app/actions"
+import { addQuestionAction, updateQuestionLikesAction } from "@/app/actions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import useSWR from "swr";
+import { v4 as uuidv4 } from "uuid";
+import type { Question, Session, UserInfo } from "../types/qa";
+import { QuestionItem } from "./question-item";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface QASessionProps {
-  userInfo: UserInfo
-  initialSession: Session
+  userInfo: UserInfo;
+  sessionId: string;
+  initialSession: Session;
 }
 
-export function QASession({ userInfo, initialSession }: QASessionProps) {
-  const [session, setSession] = useState<Session>(initialSession)
-  const [newQuestion, setNewQuestion] = useState("")
+export function QASession({
+  userInfo,
+  sessionId,
+  initialSession,
+}: QASessionProps) {
+  const [newQuestion, setNewQuestion] = useState("");
+
+  const { data: session, mutate } = useSWR<Session>(
+    `/api/session/${sessionId}`,
+    fetcher,
+    {
+      fallbackData: initialSession,
+      refreshInterval: 4000, // Poll every 10 seconds
+    }
+  );
 
   const handleAddQuestion = async () => {
-    if (!newQuestion.trim()) return
+    if (!newQuestion.trim()) return;
 
     const newQuestionItem: Question = {
       id: uuidv4(),
@@ -29,17 +45,21 @@ export function QASession({ userInfo, initialSession }: QASessionProps) {
       },
       content: newQuestion,
       timestamp: new Date().toLocaleString(),
-      likes: [], // Initialize as an empty array
-    }
+      likes: [],
+    };
 
-    const updatedSession = await addQuestionAction(session.id, newQuestionItem)
-    setSession(updatedSession)
-    setNewQuestion("")
-  }
+    await addQuestionAction(sessionId, newQuestionItem);
+    setNewQuestion("");
+    mutate(); // Trigger a revalidation
+  };
 
   const handleUpdateLikes = async (questionId: string, likes: string[]) => {
-    const updatedSession = await updateQuestionLikesAction(session.id, questionId, likes)
-    setSession(updatedSession)
+    await updateQuestionLikesAction(sessionId, questionId, likes);
+    mutate(); // Trigger a revalidation
+  };
+
+  if (!session) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -60,7 +80,7 @@ export function QASession({ userInfo, initialSession }: QASessionProps) {
           </div>
 
           <div className="space-y-4">
-            {session.questions.map((question) => (
+            {session.questions?.map((question) => (
               <QuestionItem
                 key={question.id}
                 question={question}
@@ -72,6 +92,5 @@ export function QASession({ userInfo, initialSession }: QASessionProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
-
