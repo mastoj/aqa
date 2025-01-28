@@ -28,7 +28,7 @@ export async function getSession(id: string): Promise<Session | null> {
     return null;
   }
 
-  const session = sessionResult.rows[0] as Session;
+  const session = sessionResult.rows[0] as unknown as Session;
 
   const questionsResult = await client.execute({
     sql: `SELECT q.*, GROUP_CONCAT(l.user_id) as likes
@@ -39,6 +39,7 @@ export async function getSession(id: string): Promise<Session | null> {
     args: [id],
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   session.questions = questionsResult.rows.map((row: any) => ({
     id: row.id,
     author: {
