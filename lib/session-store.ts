@@ -31,11 +31,13 @@ export async function getSession(id: string): Promise<Session | null> {
   const session = sessionResult.rows[0] as unknown as Session;
 
   const questionsResult = await client.execute({
-    sql: `SELECT q.*, GROUP_CONCAT(l.user_id) as likes
+    sql: `SELECT q.*, GROUP_CONCAT(l.user_id) as likes, 
+          COUNT(l.user_id) as like_count
           FROM questions q
           LEFT JOIN likes l ON q.id = l.question_id
           WHERE q.session_id = ?
-          GROUP BY q.id`,
+          GROUP BY q.id
+          ORDER BY like_count DESC`,
     args: [id],
   });
 
