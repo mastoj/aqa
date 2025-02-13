@@ -50,25 +50,40 @@ export function QuestionItem({
   );
 
   return (
-    <div className="flex items-start gap-4 p-4 border rounded-lg">
-      <div
-        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold"
-        style={{ backgroundColor }}
-        title={question.author.userName}
-      >
-        {initials}
+    <div className="relative flex items-start gap-4 p-4 border rounded-lg">
+      <div className="flex flex-col gap-2 items-start">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold"
+          style={{ backgroundColor }}
+          title={question.author.userName}
+        >
+          {initials}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`ml-0 ${
+            isLiked ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
+          }`}
+          onClick={handleLike}
+        >
+          <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+          <span>{question.likes.length}</span>
+        </Button>
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-base">
-            {question.author.userName}
-          </h3>
-          {isAuthor && (
-            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              You
-            </span>
-          )}
+      <div className="flex-1 flex flex-col gap-4 min-w-0">
+        <div className="flex flex-col items-start">
+          <div className="flex items-center gap-1">
+            <h3 className="font-semibold text-base">
+              {question.author.userName}
+            </h3>
+            {isAuthor && (
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                You
+              </span>
+            )}
+          </div>
           <span className="text-sm text-muted-foreground">
             {question.timestamp}
           </span>
@@ -76,18 +91,6 @@ export function QuestionItem({
 
         <p className="mt-1 text-sm">{question.content}</p>
       </div>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        className={`gap-1 ${
-          isLiked ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
-        }`}
-        onClick={handleLike}
-      >
-        <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-        <span>{question.likes.length}</span>
-      </Button>
     </div>
   );
 }
